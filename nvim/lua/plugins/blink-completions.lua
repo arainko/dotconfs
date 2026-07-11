@@ -7,5 +7,13 @@ return {
         auto_brackets = { enabled = false },
       },
     },
+    signature = { enabled = true },
+    keymap = {
+      ["<C-u>"] = { "scroll_signature_up", "fallback" },
+      ["<C-d>"] = { "scroll_signature_down", "fallback" },
+
+      -- default in all keymap presets
+      ["<C-p>"] = { "show_signature", "hide_signature", "fallback" },
+    },
   },
 }
