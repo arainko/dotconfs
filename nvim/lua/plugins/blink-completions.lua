@@ -6,6 +6,12 @@ return {
       accept = {
         auto_brackets = { enabled = false },
       },
+      list = {
+        selection = {
+          preselect = true,
+          auto_insert = false,
+        },
+      },
     },
     signature = { enabled = true },
     keymap = {

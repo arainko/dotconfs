@@ -48,38 +48,3 @@ map("v", "<C-S-Down>", ":<C-u>execute \"'<,'>move '>+\" . v:count1<cr>gv=gv", { 
 map("v", "<C-S-Up>", ":<C-u>execute \"'<,'>move '<-\" . (v:count1 + 1)<cr>gv=gv", { desc = "Move Selection Up" })
 
 map("n", "<leader>awf", vim.lsp.buf.add_workspace_folder)
-
--- new workspace
-map("n", "<leader>wn", function()
-  local buf_dir = vim.fn.getcwd(-1)
-  vim.ui.input({ prompt = "Open repo in new tab: ", default = buf_dir, completion = "dir" }, function(path)
-    if not path or path == "" then
-      return
-    end
-    local escaped_path = vim.fn.fnameescape(path)
-    vim.lsp.buf.add_workspace_folder(escaped_path)
-
-    vim.cmd("tabnew")
-    vim.cmd("tcd " .. escaped_path)
-  end)
-end, { desc = "Open folder in new tab" })
-
-local function get_tab_dirs()
-  local dirs = {}
-  for _, tabpage in ipairs(vim.api.nvim_list_tabpages()) do
-    local tabnr = vim.api.nvim_tabpage_get_number(tabpage)
-    local dir = vim.fn.getcwd(-1, tabnr)
-    if dir ~= "" and not vim.tbl_contains(dirs, dir) then
-      table.insert(dirs, dir)
-    end
-  end
-  return dirs
-end
-
-map("n", "<leader>wf", function()
-  require("telescope.builtin").find_files({ search_dirs = get_tab_dirs() })
-end, { desc = "Find Files (all open tabs)" })
-
-map("n", "<leader>wg", function()
-  require("telescope.builtin").live_grep({ search_dirs = get_tab_dirs() })
-end, { desc = "Live Grep (all open tabs)" })
