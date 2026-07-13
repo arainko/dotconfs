@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# workspaces — manage lightweight repo workspaces made of symlinks.
+#
+# A workspace is a folder under $WORKSPACES_DIR containing symlinks to
+# repositories in $REPOS_DIR. Handy for grouping the repos relevant to a
+# ticket (e.g. idy-1234) without moving or cloning anything.
+#
+#   workspaces add <name> <repo>...   create/extend a workspace with symlinks
+#   workspaces open <name>            open the workspace in nvim
+#   workspaces list                   list existing workspaces
+set -euo pipefail
+
+REPOS_DIR="${REPOS_DIR:-$HOME/repos}"
+WORKSPACES_DIR="${WORKSPACES_DIR:-$REPOS_DIR/workspaces}"
+
+die() {
+  echo "workspaces: $*" >&2
+  exit 1
+}
+
+usage() {
+  cat >&2 <<'EOF'
+usage:
+  workspaces add <name> <repo>...   create/extend a workspace with repo symlinks
+  workspaces open <name>            open the workspace in nvim
+  workspaces list                   list existing workspaces
+EOF
+  exit 1
+}
+
+cmd_add() {
+  [ $# -ge 2 ] || usage
+  local name="$1"; shift
+  local ws="$WORKSPACES_DIR/$name"
+
+  # Validate all repos up front so we don't create partial state.
+  local repo
+  for repo in "$@"; do
+    [ -d "$REPOS_DIR/$repo" ] || die "no such repo: $REPOS_DIR/$repo"
+  done
+
+  mkdir -p "$ws"
+
+  for repo in "$@"; do
+    local link="$ws/$repo"
+    if [ -L "$link" ]; then
+      echo "= $repo (already linked)"
+    elif [ -e "$link" ]; then
+      die "$link exists and is not a symlink"
+    else
+      # Relative target keeps the symlink portable if $HOME moves.
+      ln -s "../../$repo" "$link"
+      echo "+ $repo"
+    fi
+  done
+
+  echo "workspace: $ws"
+}
+
+cmd_open() {
+  [ $# -eq 1 ] || usage
+  local ws="$WORKSPACES_DIR/$1"
+  [ -d "$ws" ] || die "no such workspace: $ws"
+  nvim "$ws"
+}
+
+cmd_list() {
+  [ -d "$WORKSPACES_DIR" ] || return 0
+  find "$WORKSPACES_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort
+}
+
+[ $# -ge 1 ] || usage
+cmd="$1"; shift
+case "$cmd" in
+  add)  cmd_add "$@" ;;
+  open) cmd_open "$@" ;;
+  list) cmd_list "$@" ;;
+  *)    usage ;;
+esac
