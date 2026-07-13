@@ -30,7 +30,8 @@ EOF
 
 cmd_add() {
   [ $# -ge 2 ] || usage
-  local name="$1"; shift
+  local name="$1"
+  shift
   local ws="$WORKSPACES_DIR/$name"
 
   # Validate all repos up front so we don't create partial state.
@@ -61,7 +62,8 @@ cmd_open() {
   [ $# -eq 1 ] || usage
   local ws="$WORKSPACES_DIR/$1"
   [ -d "$ws" ] || die "no such workspace: $ws"
-  nvim "$ws"
+  cd "$ws"
+  nvim "."
 }
 
 cmd_list() {
@@ -70,10 +72,11 @@ cmd_list() {
 }
 
 [ $# -ge 1 ] || usage
-cmd="$1"; shift
+cmd="$1"
+shift
 case "$cmd" in
-  add)  cmd_add "$@" ;;
-  open) cmd_open "$@" ;;
-  list) cmd_list "$@" ;;
-  *)    usage ;;
+add) cmd_add "$@" ;;
+open) cmd_open "$@" ;;
+list) cmd_list "$@" ;;
+*) usage ;;
 esac
