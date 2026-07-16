@@ -48,3 +48,18 @@ map("v", "<C-S-Down>", ":<C-u>execute \"'<,'>move '>+\" . v:count1<cr>gv=gv", { 
 map("v", "<C-S-Up>", ":<C-u>execute \"'<,'>move '<-\" . (v:count1 + 1)<cr>gv=gv", { desc = "Move Selection Up" })
 
 map("n", "<leader>awf", vim.lsp.buf.add_workspace_folder)
+-- map("n", "<leader>ul", function()
+--   local enabled = vim.lsp.codelens.is_enabled()
+--   vim.lsp.codelens.enable(not enabled)
+--   vim.notify("CodeLens " .. (enabled and "disabled" or "enabled"))
+-- end, { desc = "Toggle CodeLens" })
+
+Snacks.toggle({
+  name = "CodeLens",
+  get = function()
+    return vim.lsp.codelens.is_enabled()
+  end,
+  set = function(enabled)
+    vim.lsp.codelens.enable(enabled)
+  end,
+}):map("<leader>ul")
