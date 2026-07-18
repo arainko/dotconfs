@@ -24,6 +24,7 @@ usage:
   workspaces add <name> <repo>...   create/extend a workspace with repo symlinks
   workspaces open <name>            open the workspace in nvim
   workspaces list                   list existing workspaces
+  workspaces dir <name>             print workspace dir
 EOF
   exit 1
 }
@@ -71,6 +72,13 @@ cmd_list() {
   find "$WORKSPACES_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort
 }
 
+cmd_dir() {
+  [ $# -eq 1 ] || usage
+  local ws="$WORKSPACES_DIR/$1"
+  [ -d "$ws" ] || die "no such workspace: $ws"
+  echo "$ws"
+}
+
 [ $# -ge 1 ] || usage
 cmd="$1"
 shift
@@ -78,5 +86,6 @@ case "$cmd" in
 add) cmd_add "$@" ;;
 open) cmd_open "$@" ;;
 list) cmd_list "$@" ;;
+dir) cmd_dir "$@" ;;
 *) usage ;;
 esac

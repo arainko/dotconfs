@@ -13,6 +13,8 @@ _workspaces() {
       'add:create/extend a workspace with repo symlinks'
       'open:open a workspace in nvim'
       'list:list existing workspaces'
+      'dir:print directory of workspace'
+
     )
     _describe 'command' cmds
     return
@@ -36,6 +38,12 @@ _workspaces() {
       workspaces=( "$workspaces_dir"/*(/:t) )
       _describe 'workspace' workspaces
       ;;
+    dir)
+      local -a workspaces
+      workspaces=( "$workspaces_dir"/*(/:t) )
+      _describe 'workspace' workspaces
+      ;;
+
   esac
 }
 
