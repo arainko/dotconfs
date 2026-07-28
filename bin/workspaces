@@ -66,7 +66,7 @@ cmd_open() {
   [ -d "$ws" ] || die "no such workspace: $ws"
 
   if ! tmux has-session -t "$name" 2>/dev/null; then
-    tmux new-session -d -s "$name" -c "$ws" -e "WORKSPACE=$ws"
+    tmux new-session -d -s "$name" -c "$ws" -e "WORKSPACE_DIR=$ws" -e "WORKSPACE=$name"
   fi
 
   if [ -n "${TMUX:-}" ]; then
