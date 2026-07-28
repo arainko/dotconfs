@@ -6,7 +6,7 @@
 # ticket (e.g. idy-1234) without moving or cloning anything.
 #
 #   workspaces add <name> <repo>...   create/extend a workspace with symlinks
-#   workspaces open <name>            open the workspace in nvim
+#   workspaces open <name>            create/attach the workspace's tmux session
 #   workspaces list                   list existing workspaces
 set -euo pipefail
 
@@ -22,7 +22,7 @@ usage() {
   cat >&2 <<'EOF'
 usage:
   workspaces add <name> <repo>...   create/extend a workspace with repo symlinks
-  workspaces open <name>            open the workspace in nvim
+  workspaces open <name>            create/attach the workspace's tmux session
   workspaces list                   list existing workspaces
   workspaces dir <name>             print workspace dir
 EOF
@@ -61,10 +61,20 @@ cmd_add() {
 
 cmd_open() {
   [ $# -eq 1 ] || usage
-  local ws="$WORKSPACES_DIR/$1"
+  local name="$1"
+  local ws="$WORKSPACES_DIR/$name"
   [ -d "$ws" ] || die "no such workspace: $ws"
-  cd "$ws"
-  nvim "."
+
+  if ! tmux has-session -t "$name" 2>/dev/null; then
+    tmux new-session -d -s "$name" -c "$ws" -e "WORKSPACE=$ws"
+  fi
+
+  if [ -n "${TMUX:-}" ]; then
+    # Already inside tmux: can't nest an attach, so move this client instead.
+    tmux switch-client -t "$name"
+  else
+    tmux attach-session -t "$name"
+  fi
 }
 
 cmd_list() {
