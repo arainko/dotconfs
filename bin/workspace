@@ -1,0 +1,34 @@
+workspace() {
+
+  local cmd="${1:-}"
+
+  case "$cmd" in
+    add)
+      shift
+      (( $# >= 1 )) || { echo "usage: workspace add <repo>..." >&2; return 1 }
+      [[ -n "${WORKSPACE:-}" ]] || {
+        echo "workspace: \$WORKSPACE is unset - are you inside a workspace tmux session?" >&2
+        return 1
+      }
+      workspaces add "$WORKSPACE" "$@"
+      ;;
+    warp)
+      [[ -n "${WORKSPACE_DIR:-}" ]] || {
+        echo "workspace: \$WORKSPACE_DIR is unset - are you inside a workspace tmux session?" >&2
+        return 1
+      }
+      cd "$WORKSPACE_DIR"
+      ;;
+    branch)
+      [[ -n "${WORKSPACE:-}" ]] || {
+        echo "workspace: \$WORKSPACE is unset - are you inside a workspace tmux session?" >&2
+        return 1
+      }
+      git checkout -b "$WORKSPACE"
+      ;;
+    *)
+      echo "usage: workspace add <repo>...| warp | branch" >&2
+      return 1
+      ;;
+  esac
+}

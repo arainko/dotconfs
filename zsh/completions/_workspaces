@@ -1,9 +1,5 @@
 #compdef workspaces
 
-# Completion for the `workspaces` script.
-#  - `add`  : first arg is a free-form workspace name, rest complete to repos
-#  - `open` : completes to existing workspace names
-
 _workspaces() {
   local repos_dir="${REPOS_DIR:-$HOME/repos}"
   local workspaces_dir="${WORKSPACES_DIR:-$repos_dir/workspaces}"
@@ -11,7 +7,7 @@ _workspaces() {
   if (( CURRENT == 2 )); then
     local -a cmds=(
       'add:create/extend a workspace with repo symlinks'
-      'open:open a workspace in nvim'
+      'open:open a workspace in tmux'
       'list:list existing workspaces'
       'dir:print directory of workspace'
 
