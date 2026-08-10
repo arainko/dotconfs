@@ -1,13 +1,4 @@
 #!/usr/bin/env bash
-# workspaces — manage lightweight repo workspaces made of symlinks.
-#
-# A workspace is a folder under $WORKSPACES_DIR containing symlinks to
-# repositories in $REPOS_DIR. Handy for grouping the repos relevant to a
-# ticket (e.g. idy-1234) without moving or cloning anything.
-#
-#   workspaces add <name> <repo>...   create/extend a workspace with symlinks
-#   workspaces open <name>            create/attach the workspace's tmux session
-#   workspaces list                   list existing workspaces
 set -euo pipefail
 
 REPOS_DIR="${REPOS_DIR:-$HOME/repos}"
@@ -21,10 +12,11 @@ die() {
 usage() {
   cat >&2 <<'EOF'
 usage:
-  workspaces add <name> <repo>...   create/extend a workspace with repo symlinks
-  workspaces open <name>            create/attach the workspace's tmux session
-  workspaces list                   list existing workspaces
-  workspaces dir <name>             print workspace dir
+  workspaces add <name> <repo>...            create/extend a workspace with repo symlinks
+  workspaces add-worktree <name> <repo>...   add git worktrees (branch = <name>) to the workspace
+  workspaces open <name>                     create/attach the workspace's tmux session
+  workspaces list                            list existing workspaces
+  workspaces dir <name>                      print workspace dir
 EOF
   exit 1
 }
@@ -35,7 +27,6 @@ cmd_add() {
   shift
   local ws="$WORKSPACES_DIR/$name"
 
-  # Validate all repos up front so we don't create partial state.
   local repo
   for repo in "$@"; do
     [ -d "$REPOS_DIR/$repo" ] || die "no such repo: $REPOS_DIR/$repo"
@@ -50,9 +41,68 @@ cmd_add() {
     elif [ -e "$link" ]; then
       die "$link exists and is not a symlink"
     else
-      # Relative target keeps the symlink portable if $HOME moves.
       ln -s "../../$repo" "$link"
       echo "+ $repo"
+    fi
+  done
+
+  echo "workspace: $ws"
+}
+
+default_branch() {
+  local repo_dir="$1" ref
+  if ref="$(git -C "$repo_dir" symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null)"; then
+    echo "${ref#refs/remotes/origin/}"
+    return
+  fi
+  local b
+  for b in main master; do
+    if git -C "$repo_dir" show-ref --verify --quiet "refs/heads/$b"; then
+      echo "$b"
+      return
+    fi
+  done
+
+  if git -C "$repo_dir" remote set-head origin --auto >/dev/null 2>&1 &&
+    ref="$(git -C "$repo_dir" symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null)"; then
+    echo "${ref#refs/remotes/origin/}"
+    return
+  fi
+  die "cannot determine default branch for $repo_dir"
+}
+
+cmd_add_worktree() {
+  [ $# -ge 2 ] || usage
+  local name="$1"
+  shift
+  local ws="$WORKSPACES_DIR/$name"
+  local branch="$name"
+
+  local repo
+  for repo in "$@"; do
+    local repo_dir="$REPOS_DIR/$repo"
+    [ -d "$repo_dir" ] || die "no such repo: $repo_dir"
+    git -C "$repo_dir" rev-parse --git-dir >/dev/null 2>&1 || die "not a git repo: $repo_dir"
+  done
+
+  mkdir -p "$ws"
+
+  for repo in "$@"; do
+    local repo_dir="$REPOS_DIR/$repo"
+    local tree="$ws/$repo"
+
+    if [ -e "$tree" ] || [ -L "$tree" ]; then
+      die "$tree already exists"
+    fi
+
+    if git -C "$repo_dir" show-ref --verify --quiet "refs/heads/$branch"; then
+      git -C "$repo_dir" worktree add "$tree" "$branch"
+      echo "+ $repo (worktree on existing branch $branch)"
+    else
+      local base
+      base="$(default_branch "$repo_dir")"
+      git -C "$repo_dir" worktree add -b "$branch" "$tree" "$base"
+      echo "+ $repo (worktree on new branch $branch from $base)"
     fi
   done
 
@@ -70,7 +120,6 @@ cmd_open() {
   fi
 
   if [ -n "${TMUX:-}" ]; then
-    # Already inside tmux: can't nest an attach, so move this client instead.
     tmux switch-client -t "$name"
   else
     tmux attach-session -t "$name"
@@ -94,6 +143,7 @@ cmd="$1"
 shift
 case "$cmd" in
 add) cmd_add "$@" ;;
+add-worktree) cmd_add_worktree "$@" ;;
 open) cmd_open "$@" ;;
 list) cmd_list "$@" ;;
 dir) cmd_dir "$@" ;;

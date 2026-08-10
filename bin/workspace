@@ -12,6 +12,15 @@ workspace() {
       }
       workspaces add "$WORKSPACE" "$@"
       ;;
+    add-worktree)
+      shift
+      (( $# >= 1 )) || { echo "usage: workspace add-worktree <repo>..." >&2; return 1 }
+      [[ -n "${WORKSPACE:-}" ]] || {
+        echo "workspace: \$WORKSPACE is unset - are you inside a workspace tmux session?" >&2
+        return 1
+      }
+      workspaces add-worktree "$WORKSPACE" "$@"
+      ;;
     warp)
       [[ -n "${WORKSPACE_DIR:-}" ]] || {
         echo "workspace: \$WORKSPACE_DIR is unset - are you inside a workspace tmux session?" >&2
@@ -27,7 +36,7 @@ workspace() {
       git checkout -b "$WORKSPACE"
       ;;
     *)
-      echo "usage: workspace add <repo>...| warp | branch" >&2
+      echo "usage: workspace add <repo>...| add-worktree <repo>...| warp | branch" >&2
       return 1
       ;;
   esac
