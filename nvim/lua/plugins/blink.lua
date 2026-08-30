@@ -12,11 +12,15 @@ return {
           auto_insert = false,
         },
       },
+      menu = {
+        auto_show = false,
+      },
     })
 
     opts.signature = vim.tbl_deep_extend("force", opts.signature or {}, {
       enabled = true,
       trigger = {
+        enabled = false,
         show_on_trigger_character = false,
         show_on_insert_on_trigger_character = false,
         show_on_insert = false,
@@ -29,7 +33,7 @@ return {
 
       -- default in all keymap presets
       ["<C-p>"] = { "show_signature", "hide_signature", "fallback" },
-      ["<C-space>"] = { "show", "show_documentation", "hide_documentation", "fallback" },
+      ["<C-space>"] = { "show", "hide", "fallback" },
     })
 
     opts.sources.default = { "lsp", "path" }

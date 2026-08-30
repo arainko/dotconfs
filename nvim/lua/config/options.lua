@@ -5,3 +5,5 @@
 -- Register the `jar:` BufReadCmd early so it's in place before any jar buffer
 -- (e.g. Metals "go to implementation" into dependency sources) is opened.
 require("config.jar-open")
+
+vim.g.maplocalleader = ","
