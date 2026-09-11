@@ -1,0 +1,90 @@
+#!/usr/bin/env -S scala-cli -S 3
+
+//> using scala 3.8.2
+//> using dep io.circe::circe-core:0.14.16
+//> using dep io.circe::circe-parser:0.14.16
+//> using dep com.monovore::decline:2.6.2
+
+import cats.syntax.all.*
+import com.monovore.decline.*
+import io.circe.*
+import io.circe.syntax.*
+import io.circe.parser.parse
+
+import java.nio.file.{Files, Path, Paths}
+import scala.jdk.CollectionConverters.*
+import scala.sys.process.*
+import scala.util.Try
+import java.nio.file.FileVisitOption
+import scala.jdk.CollectionConverters.*
+
+val command: Command[Unit] =
+  val workspace = Opts.env[String]("WORKSPACE_DIR", "The workspace dir to scan.")
+    .map(Path.of(_))
+
+  Command("regen-mcp", "Regenerate .mcp.json from nested .mcp.json files.")(
+    workspace.map(run)
+  )
+
+
+// Top-level statement: this actually executes in script mode.
+command.parse(args.toIndexedSeq, sys.env) match {
+  case Left(help) =>
+    Console.err.println(help)
+    sys.exit(if help.errors.nonEmpty then 1 else 0)
+  case Right(()) => ()
+}
+
+def run(wsp: Path): Unit = {
+  val files = discoverFolders(wsp)
+    .flatMap(discoverMcpFiles)
+    .map(mcpFilePath => (path = mcpFilePath, mcpFile = parseMcpFile(mcpFilePath)))
+    .toList()
+    .asScala
+
+  val merged = McpFile.merge(files)
+  val target = wsp.resolve(".mcp.json")
+  Files.writeString(target, merged.asJson.spaces2)
+  println(s"Wrote ${merged.mcpServers.size} server(s) to $target")
+}
+
+def discoverFolders(workspace: Path) =
+  Files
+    .find(
+      workspace,
+      1,
+      (path, attrs) => attrs.isDirectory(),
+      FileVisitOption.FOLLOW_LINKS
+    )
+    .filter(path => path != workspace)
+    .peek(folder => println(s"Discovered folder: $folder"))
+
+def discoverMcpFiles(path: Path) =
+  Files
+    .find(
+      path,
+      1,
+      (path, attrs) => path.endsWith(".mcp.json") && attrs.isRegularFile(),
+      FileVisitOption.FOLLOW_LINKS
+    )
+    .peek(mcpFile => println(s"Discovered mcp file: $mcpFile"))
+
+def parseMcpFile(path: Path) = {
+  val content = Files.readString(path)
+  parse(content).flatMap(_.as[McpFile]).fold(throw _, identity)
+}
+
+case class McpFile(mcpServers: Map[String, Json]) derives Encoder, Decoder
+
+object McpFile {
+  def merge(files: Iterable[(path: Path, mcpFile: McpFile)]) =
+    McpFile {
+      files
+        .map { entry =>
+          val folderName = entry.path.getParent().getFileName().toString()
+          entry.mcpFile.mcpServers
+            .map((name, body) => s"$name-$folderName" -> body)
+        }
+        .foldLeft(Map.empty[String, Json])(_ ++ _)
+    }
+}

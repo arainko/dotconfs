@@ -5,9 +5,11 @@
 ```bash
 ln -sf ~/repos/dotconfs/nvim ~/.config/nvim
 
-ln -sf ~/repos/dotconfs/tmux/.tmux.conf ~/.tmux.con
+ln -sf ~/repos/dotconfs/tmux/.tmux.conf ~/.tmux.conf
 
 ln -sf ~/repos/dotconfs/bin/workspaces ~/.local/bin/workspace
+
+ln -sf ~/repos/dotconfs/bin/regen-mcp ~/.local/bin/regen-mcp 
 
 mkdir ~/.oh-my-zsh/completion
 
