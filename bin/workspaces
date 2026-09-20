@@ -119,6 +119,8 @@ cmd_open() {
     tmux new-session -d -s "$name" -c "$ws" -e "WORKSPACE_DIR=$ws" -e "WORKSPACE=$name"
   fi
 
+  echo "$name" >"$HOME/.last-workspace"
+
   if [ -n "${TMUX:-}" ]; then
     tmux switch-client -t "$name"
   else

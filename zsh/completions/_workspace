@@ -9,6 +9,7 @@ _workspace() {
       'add-worktree:add git worktrees (branch = $WORKSPACE) to the current workspace'
       'warp:cd to the current workspace dir'
       'branch:create a new git branch equal to $WORKSPACE'
+      'reopen:opens the latest workspace'
     )
     _describe 'command' cmds
     return
@@ -24,6 +25,8 @@ _workspace() {
     warp)
       ;;
     branch)
+      ;;
+    reopen)
       ;;
   esac
 }

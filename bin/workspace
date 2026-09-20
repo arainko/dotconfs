@@ -35,6 +35,9 @@ workspace() {
       }
       git checkout -b "$WORKSPACE"
       ;;
+    reopen)
+      workspaces open $(cat "$HOME/.last-workspace")
+      ;;
     *)
       echo "usage: workspace add <repo>...| add-worktree <repo>...| warp | branch" >&2
       return 1
