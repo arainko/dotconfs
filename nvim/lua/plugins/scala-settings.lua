@@ -7,11 +7,14 @@ return {
     opts = function()
       local metals_config = require("metals").bare_config()
 
+      -- Ref: https://github.com/scalameta/metals/blob/a1a789a6f4921dd363d7bb0cb58f2a48aed241fb/metals/src/main/scala/scala/meta/internal/metals/UserConfiguration.scala#L30
       metals_config.settings = {
         showImplicitArguments = false,
         showImplicitConversionsAndClasses = false,
         showInferredType = false,
         defaultBspToBuildTool = true,
+        startMcpServer = false,
+        -- mcpClient = "claude"
       }
 
       metals_config.on_attach = function(client, bufnr)
@@ -22,12 +25,27 @@ return {
     end,
     keys = {
       {
-        "<leader>mi",
+        "<leader>mia",
         function()
           require("metals").toggle_setting("showImplicitArguments")
         end,
         desc = "Toggle implicit arguments",
       },
+      {
+        "<leader>mic",
+        function()
+          require("metals").toggle_setting("showImplicitConversionsAndClasses")
+        end,
+        desc = "Toggle implicit conversions and classes",
+      },
+      {
+        "<leader>mti",
+        function()
+          require("metals").toggle_setting("showInferredType")
+        end,
+        desc = "Toggle inferred types",
+      },
+
     },
   },
   {
