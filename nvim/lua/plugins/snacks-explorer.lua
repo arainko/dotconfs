@@ -1,6 +1,12 @@
 return {
   "folke/snacks.nvim",
   opts = {
+    lazygit = {
+      config = {
+        -- get rid of the annoying thing when you open lazygit in a non-git repo
+        notARepository = "skip",
+      },
+    },
     picker = {
       sources = {
         explorer = {
