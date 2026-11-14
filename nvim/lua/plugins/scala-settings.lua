@@ -13,8 +13,8 @@ return {
         showImplicitConversionsAndClasses = false,
         showInferredType = false,
         defaultBspToBuildTool = true,
-        startMcpServer = false,
-        -- mcpClient = "claude"
+        startMcpServer = true,
+        mcpClient = os.getenv("SLOP_MACHINE") or "opencode"
       }
 
       metals_config.on_attach = function(client, bufnr)
@@ -45,6 +45,13 @@ return {
         end,
         desc = "Toggle inferred types",
       },
+      {
+        "<leader>mcp",
+        function()
+          require("metals").toggle_setting("startMcpServer")
+        end,
+        desc = "Start MCP server",
+      }
 
     },
   },
