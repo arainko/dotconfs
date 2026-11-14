@@ -8,3 +8,4 @@ require("config.jar-open")
 
 vim.g.maplocalleader = ","
 vim.g.autoformat = false
+vim.opt.relativenumber = false
